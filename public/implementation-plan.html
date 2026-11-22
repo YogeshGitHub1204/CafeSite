@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Cafe Commercial Website — Architecture, Asset Integration & Implementation Plan</title>
+    <style>
+      :root {
+        --bg: #f6f3ee;
+        --surface: #ffffff;
+        --surface-muted: #efeae2;
+        --ink: #1c1917;
+        --ink-muted: #57534e;
+        --border: #e2dcd3;
+        --accent: #b45309;
+        --accent-soft: #fef3c7;
+        --success: #15803d;
+        --code-bg: #1c1917;
+        --code-ink: #f5f5f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Plus Jakarta Sans", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.65;
+        font-size: 15px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        max-width: 1360px;
+        margin: 0 auto;
+        gap: 32px;
+        padding: 32px 24px 72px;
+      }
+
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          position: static !important;
+        }
+      }
+
+      aside {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+      }
+
+      aside h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+      }
+
+      aside nav a {
+        display: block;
+        padding: 6px 8px;
+        border-radius: 6px;
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 500;
+      }
+
+      aside nav a:hover {
+        background: var(--surface-muted);
+        color: var(--accent);
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      .hero {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 36px;
+        margin-bottom: 28px;
+      }
+
+      .kicker {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--accent);
+        margin: 0 0 8px;
+      }
+
+      h1 {
+        font-family: Georgia, "Cormorant Garamond", serif;
+        font-size: clamp(2rem, 3.6vw, 2.8rem);
+        line-height: 1.12;
+        margin: 0 0 14px;
+        letter-spacing: -0.02em;
+      }
+
+      h2.section-title {
+        font-family: Georgia, "Cormorant Garamond", serif;
+        font-size: 1.85rem;
+        margin: 0 0 12px;
+        line-height: 1.2;
+      }
+
+      h3 {
+        font-size: 1.08rem;
+        margin: 22px 0 8px;
+      }
+
+      section.card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+      }
+
+      .muted {
+        color: var(--ink-muted);
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+      }
+
+      .box h4 {
+        margin: 0 0 6px;
+        font-size: 0.96rem;
+      }
+
+      .box p,
+      .box ul {
+        margin: 0;
+        font-size: 0.88rem;
+        color: var(--ink-muted);
+      }
+
+      .box ul {
+        padding-left: 18px;
+        margin-top: 6px;
+      }
+
+      pre {
+        background: var(--code-bg);
+        color: var(--code-ink);
+        padding: 18px;
+        border-radius: 12px;
+        overflow-x: auto;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+        font-size: 12.8px;
+        line-height: 1.55;
+        margin: 14px 0;
+      }
+
+      code {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+        font-size: 0.88em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ink-muted);
+        background: var(--bg);
+      }
+
+      .phase-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
+      }
+
+      .phase-meta {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+      }
+
+      .checklist li {
+        padding: 6px 0 6px 24px;
+        position: relative;
+        font-size: 0.92rem;
+      }
+
+      .checklist li::before {
+        content: "[ ]";
+        position: absolute;
+        left: 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--accent);
+        top: 7px;
+      }
+
+      .diagram-wrap {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px;
+        overflow-x: auto;
+        margin: 16px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside>
+        <h2>Blueprint Index</h2>
+        <nav>
+          <a href="#overview">1. Vision &amp; Aesthetic Connectivity</a>
+          <a href="#flow">2. End-to-End System Flow</a>
+          <a href="#assets-3d">3. Integrating Downloaded 3D Assets</a>
+          <a href="#architecture">4. Project Structure &amp; Data Schema</a>
+          <a href="#phases">5. Phase-Wise Development Plan</a>
+          <a href="#testing">6. Testing &amp; QA Matrix</a>
+          <a href="#deployment">7. Production Deployment Guide</a>
+          <a href="#ide-prompts">8. IDE Starter Checklist</a>
+        </nav>
+      </aside>
+
+      <main>
+        <!-- HERO -->
+        <header class="hero">
+          <p class="kicker">Technical Architecture &amp; IDE Implementation Blueprint</p>
+          <h1>3D Specialty Cafe Commercial Website</h1>
+          <p class="muted">
+            A complete engineering specification for connecting a cafe's physical 3D aesthetic (interior architecture, lighting, materials, and downloaded 3D models) directly to live commercial ordering, 3D-synced table reservations, and an owner operations studio.
+          </p>
+          <div class="grid-3">
+            <div class="box">
+              <h4>Frontend &amp; 3D Engine</h4>
+              <p>React 19 · TypeScript · Tailwind CSS v4 · Three.js (GLTFLoader + Draco + RoomEnvironment)</p>
+            </div>
+            <div class="box">
+              <h4>Backend &amp; Persistence</h4>
+              <p>Node.js · Express · REST APIs · PostgreSQL (Drizzle/Prisma) or Firestore / JSON Seed Store</p>
+            </div>
+            <div class="box">
+              <h4>Core Differentiator</h4>
+              <p>Single source of truth linking 3D interior aesthetics &amp; tables directly to live storefront commerce</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- 1. OVERVIEW -->
+        <section id="overview" class="card">
+          <h2 class="section-title">1. Vision &amp; Aesthetic-to-Commerce Connectivity</h2>
+          <p>
+            Most 3D websites treat WebGL as a decorative hero banner disconnected from revenue. In this architecture, the <strong>3D Cafe Space IS the storefront interface</strong>:
+          </p>
+          <div class="grid-2">
+            <div class="box">
+              <h4>1. Spatial Zone → Commercial Filter</h4>
+              <p>
+                Raycasting on 3D hotspots (Espresso Bar, Roastery Wall, Pastry Display, Retail Shelf) smoothly glides the camera to that station and filters the live ordering catalog to matching SKUs.
+              </p>
+            </div>
+            <div class="box">
+              <h4>2. Physical 3D Tables → Live Reservations</h4>
+              <p>
+                Each physical table mesh (<code>T1</code>–<code>T5</code>) binds to a database table record. Pendant light warmth and coaster rings reflect live status (<code>available</code>, <code>reserved</code>, <code>occupied</code>). Clicking a 3D table pre-selects it in the booking engine.
+              </p>
+            </div>
+            <div class="box">
+              <h4>3. Cafe Atmosphere ↔ Website Theme</h4>
+              <p>
+                Owner-selected atmosphere presets (Morning Limestone, Golden Hour, Evening Roastery) and material finishes (Limestone, Walnut, Slate, Brass, Obsidian) update 3D PBR materials/lighting and CSS storefront tokens simultaneously.
+              </p>
+            </div>
+            <div class="box">
+              <h4>4. 3D Product Turntable → Variant Checkout</h4>
+              <p>
+                A secondary on-demand 3D turntable renders individual downloaded 3D products (cups, V60 drippers, pastries, bean bags), reflecting cup size or roast label variants in real time before checkout.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. FLOW -->
+        <section id="flow" class="card">
+          <h2 class="section-title">2. End-to-End System &amp; User Flow</h2>
+          <p class="muted">
+            Both customer journeys and owner operations share the same unified state graph served by <code>/api/state</code>.
+          </p>
+
+          <div class="diagram-wrap">
+            <svg viewBox="0 0 920 340" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="System Architecture Flow Diagram">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#b45309" />
+                </marker>
+              </defs>
+              <!-- Boxes -->
+              <rect x="20" y="30" width="210" height="86" rx="10" fill="#ffffff" stroke="#e2dcd3" stroke-width="1.5" />
+              <text x="36" y="58" font-size="13" font-weight="700" fill="#1c1917">1. 3D Cafe Diorama</text>
+              <text x="36" y="78" font-size="11.5" fill="#57534e">Orbit · Camera Presets</text>
+              <text x="36" y="96" font-size="11.5" fill="#57534e">Raycaster Hotspots &amp; Tables</text>
+
+              <rect x="280" y="30" width="220" height="86" rx="10" fill="#ffffff" stroke="#e2dcd3" stroke-width="1.5" />
+              <text x="296" y="58" font-size="13" font-weight="700" fill="#1c1917">2. 3D Product Studio</text>
+              <text x="296" y="78" font-size="11.5" fill="#57534e">360° Turntable (.glb models)</text>
+              <text x="296" y="96" font-size="11.5" fill="#57534e">Size / Grind / Milk Variants</text>
+
+              <rect x="550" y="30" width="340" height="86" rx="10" fill="#ffffff" stroke="#e2dcd3" stroke-width="1.5" />
+              <text x="566" y="58" font-size="13" font-weight="700" fill="#1c1917">3. Commercial Storefront &amp; Checkout</text>
+              <text x="566" y="78" font-size="11.5" fill="#57534e">Bag Drawer · Promo · Tip · Pickup/Dine-in/Ship</text>
+              <text x="566" y="96" font-size="11.5" fill="#57534e">Table Booking Form (Conflict-Free Validation)</text>
+
+              <rect x="280" y="185" width="350" height="115" rx="10" fill="#1c1917" />
+              <text x="298" y="214" font-size="13" font-weight="700" fill="#f5f5f4">4. Express API &amp; Persistent Database</text>
+              <text x="298" y="236" font-size="11.5" fill="#d6d3d1">GET /api/state · PATCH /api/config (Aesthetics)</text>
+              <text x="298" y="256" font-size="11.5" fill="#d6d3d1">POST /api/orders (Atomic Stock Deduction)</text>
+              <text x="298" y="276" font-size="11.5" fill="#d6d3d1">POST /api/reservations (Table &amp; Slot Lock)</text>
+
+              <rect x="680" y="185" width="210" height="115" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" />
+              <text x="696" y="214" font-size="13" font-weight="700" fill="#78350f">5. Owner Studio</text>
+              <text x="696" y="236" font-size="11.5" fill="#78350f">Aesthetic &amp; Lighting Sync</text>
+              <text x="696" y="256" font-size="11.5" fill="#78350f">Barista KDS Order Queue</text>
+              <text x="696" y="276" font-size="11.5" fill="#78350f">Table Floor &amp; Stock Control</text>
+
+              <!-- Arrows -->
+              <line x1="230" y1="73" x2="274" y2="73" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+              <line x1="500" y1="73" x2="544" y2="73" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+              <line x1="720" y1="116" x2="580" y2="180" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+              <line x1="125" y1="116" x2="274" y2="215" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+              <line x1="676" y1="242" x2="636" y2="242" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+              <line x1="636" y1="262" x2="676" y2="262" stroke="#b45309" stroke-width="1.8" marker-end="url(#arrow)" />
+            </svg>
+          </div>
+
+          <h3>Customer &amp; Owner Operational Flows</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Flow</th>
+                <th>Trigger</th>
+                <th>Frontend Action</th>
+                <th>Backend Business Logic</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Zone Ordering</strong></td>
+                <td>Click 3D Espresso Bar or Roastery Wall</td>
+                <td>Camera glides via <code>MathUtils.damp</code>; opens contextual CTA &amp; filters Menu</td>
+                <td>Reads live <code>menu</code> items &amp; remaining stock</td>
+              </tr>
+              <tr>
+                <td><strong>3D Inspection</strong></td>
+                <td>Click <em>3D View</em> on any product card</td>
+                <td>Loads item's <code>.glb</code> model onto 3D Turntable; swaps cup/bag variant</td>
+                <td>Applies active <code>StoreConfig</code> finishes &amp; pricing</td>
+              </tr>
+              <tr>
+                <td><strong>Checkout</strong></td>
+                <td>Submit Bag Drawer (<code>pickup</code> / <code>dine-in</code> / <code>shipping</code>)</td>
+                <td>Displays itemized receipt &amp; 4-step live order tracker</td>
+                <td><code>POST /api/orders</code> validates stock, deducts atomically, applies promo &amp; tip</td>
+              </tr>
+              <tr>
+                <td><strong>Table Booking</strong></td>
+                <td>Click 3D Table <code>T1–T5</code> + submit form</td>
+                <td>Pre-selects table &amp; shows max seat cap</td>
+                <td><code>POST /api/reservations</code> checks guest capacity &amp; prevents slot double-booking</td>
+              </tr>
+              <tr>
+                <td><strong>Aesthetic Sync</strong></td>
+                <td>Owner changes atmosphere / finish / metal</td>
+                <td>Updates 3D lights, PBR materials, menu board &amp; site palette</td>
+                <td><code>PATCH /api/config</code> persists theme for all incoming visitors</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 3. DOWNLOADED 3D ELEMENTS INTEGRATION -->
+        <section id="assets-3d" class="card">
+          <h2 class="section-title">3. Integrating Your Downloaded 3D Elements (.glb / .gltf)</h2>
+          <p>
+            To replace or blend procedural Three.js geometry with your downloaded 3D models (espresso machines, chairs, pastries, coffee bags, cups, planters), follow this strict optimization and loading workflow so page load stays under 2 seconds and frame rate remains smooth.
+          </p>
+
+          <h3>A. Recommended Folder Structure</h3>
+          <pre>public/
+  draco/                         # Copy from node_modules/three/examples/jsm/libs/draco/gltf/
+  models/
+    cafe/
+      cafe_shell.glb             # Floor, walls, steel window frames
+      espresso_machine.glb       # Hero dual-group espresso bar asset
+      pastry_display.glb         # Glass cloche &amp; croissants
+      roaster_drum.glb           # Drum roaster &amp; bean shelves
+      bistro_table_round.glb     # Reusable table mesh (instanced or cloned)
+    products/
+      cortado_cup.glb            # 3D Turntable model for espresso drinks
+      pourover_v60.glb           # 3D Turntable model for slow-bar brews
+      cardamom_pastry.glb        # 3D Turntable model for bakery
+      coffee_bag_250g.glb        # 3D Turntable model for whole beans</pre>
+
+          <h3>B. Pre-Import Asset Optimization Checklist (Run Before Putting in Repo)</h3>
+          <p class="muted">
+            Downloaded models from Sketchfab, BlenderKit, or TurboSquid are often 20–100 MB with 4K textures. Optimize them with <code>gltf-transform</code> CLI in your IDE terminal:
+          </p>
+          <pre># 1. Install gltf-transform globally or run via npx
+npm install -g @gltf-transform/cli
+
+# 2. Compress geometry with Draco + resize textures to max 1024px WebP
+npx gltf-transform optimize input_machine.glb public/models/cafe/espresso_machine.glb \
+  --compress draco \
+  --texture-compress webp \
+  --texture-size 1024</pre>
+          <table>
+            <thead>
+              <tr>
+                <th>Asset Tier</th>
+                <th>Target File Size</th>
+                <th>Max Triangles</th>
+                <th>Max Texture Size</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Hero Diorama (Entire Cafe Scene Combined)</td>
+                <td>&le; 4.5 MB total</td>
+                <td>&le; 120,000 tris</td>
+                <td>1024 &times; 1024 px</td>
+              </tr>
+              <tr>
+                <td>Single Product Turntable (<code>.glb</code>)</td>
+                <td>&le; 1.2 MB each</td>
+                <td>&le; 35,000 tris</td>
+                <td>1024 &times; 1024 px</td>
+              </tr>
+              <tr>
+                <td>Repeated Props (Chairs, Cups, Bags)</td>
+                <td>&le; 250 KB</td>
+                <td>&le; 3,500 tris</td>
+                <td>512 &times; 512 px (use <code>InstancedMesh</code> or clone)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>C. Drop-In TypeScript GLTFLoader + DRACOLoader + Auto-Grounding Utility</h3>
+          <p class="muted">
+            Create <code>src/three/assetLoader.ts</code> to load downloaded <code>.glb</code> models, normalize their scale and bottom-center pivot so nothing floats, enable shadows, and bind material hooks for aesthetic sync:
+          </p>
+          <pre>import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const dracoLoader = new DRACOLoader();
+// Host decoder files locally in public/draco/ to avoid external CDN failures
+dracoLoader.setDecoderPath('/draco/');
+
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+export interface LoadedModelOptions {
+  targetHeight?: number;
+  castShadow?: boolean;
+  receiveShadow?: boolean;
+  onMaterialVisit?: (mat: THREE.MeshStandardMaterial, meshName: string) =&gt; void;
+}
+
+export async function loadNormalizedGLB(
+  url: string,
+  options: LoadedModelOptions = {}
+): Promise&lt;THREE.Group&gt; {
+  const gltf = await gltfLoader.loadAsync(url);
+  const root = gltf.scene;
+
+  // 1. Scale uniformly to real-world meter height if specified
+  if (options.targetHeight) {
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    if (size.y &gt; 0) {
+      const scale = options.targetHeight / size.y;
+      root.scale.setScalar(scale);
+    }
+  }
+
+  // 2. Center X/Z and place bottom flush at Y = 0
+  root.updateMatrixWorld(true);
+  const alignedBox = new THREE.Box3().setFromObject(root);
+  const center = new THREE.Vector3();
+  alignedBox.getCenter(center);
+  root.position.x -= center.x;
+  root.position.z -= center.z;
+  root.position.y -= alignedBox.min.y;
+
+  // 3. Configure shadows and collect materials for dynamic theme sync
+  root.traverse((child) =&gt; {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh;
+      mesh.castShadow = options.castShadow ?? true;
+      mesh.receiveShadow = options.receiveShadow ?? true;
+      if (options.onMaterialVisit &amp;&amp; mesh.material instanceof THREE.MeshStandardMaterial) {
+        options.onMaterialVisit(mesh.material, mesh.name);
+      }
+    }
+  });
+
+  return root;
+}</pre>
+
+          <h3>D. Naming Convention inside Blender for Raycasting &amp; Live Material Swaps</h3>
+          <ul class="checklist">
+            <li>Name clickable parent nodes cleanly in Blender before export: <code>hotspot_espresso</code>, <code>hotspot_roastery</code>, <code>table_T1</code> .. <code>table_T5</code>.</li>
+            <li>Name swappable materials consistently: <code>mat_counter_stone</code>, <code>mat_wall_plaster</code>, <code>mat_accent_metal</code>, <code>mat_bag_label</code> so <code>applyAesthetics()</code> can update downloaded <code>.glb</code> materials dynamically!</li>
+            <li>Always keep an invisible bounding-box proxy mesh on <code>raycaster.layers.set(1)</code> for complex <code>.glb</code> models so hover/click raycasting stays instantaneous.</li>
+          </ul>
+        </section>
+
+        <!-- 4. ARCHITECTURE & SCHEMA -->
+        <section id="architecture" class="card">
+          <h2 class="section-title">4. Codebase Structure &amp; Production Database Schema</h2>
+          <div class="grid-2">
+            <div>
+              <h3>Modular Directory Layout</h3>
+              <pre>src/
+  types/cafe.ts              # Shared domain interfaces &amp; theme tokens
+  three/
+    assetLoader.ts           # GLTFLoader + DRACOLoader + grounding
+    proceduralTextures.ts    # Canvas textures (latte art, boards, terrazzo)
+    cafeBuilder.ts           # Main 3D cafe scene assembly + theme hooks
+  components/
+    CafeScene3D.tsx          # Hero 3D viewport + collapsible dock
+    ProductShowcase3D.tsx    # On-demand 3D product turntable
+    MenuCatalogSection.tsx   # Filtering + 3D Inspect + variant modal
+    ReservationSection.tsx   # 3D-synced table reservation engine
+    BagDrawer.tsx            # Checkout + promo + 4-step order tracker
+    OwnerStudioView.tsx      # Aesthetics sync + KDS + floor + stock
+server.ts                    # Express API + Vite dev / static prod</pre>
+            </div>
+            <div>
+              <h3>Production Relational Schema (PostgreSQL / Drizzle)</h3>
+              <pre>store_config (id, cafe_name, atmosphere, surface_finish,
+              accent_metal, featured_item_id, tagline,
+              active_roast_note, pickup_lead_minutes)
+
+menu_items   (id, name, category, price, description,
+              tasting_notes, image_url, stock, available)
+
+cafe_tables  (id, code, label, zone, seats, status,
+              pos_x, pos_z, shape)
+
+orders       (id, order_number, customer_name, fulfillment,
+              table_code, items_json, subtotal, discount,
+              tip, total, status, created_at)
+
+reservations (id, code, table_id, customer_name, party_size,
+              date, time_slot, pre_order_notes, status)</pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. PHASE-WISE PLAN -->
+        <section id="phases" class="card">
+          <h2 class="section-title">5. Phase-Wise Distribution of Development</h2>
+
+          <div class="box" style="margin-bottom: 16px;">
+            <div class="phase-header">
+              <h4>Phase 1 — Foundation, Design System &amp; 3D Asset Pipeline</h4>
+              <span class="phase-meta">Week 1 · Days 1–3</span>
+            </div>
+            <ul>
+              <li>Initialize Vite + React + TypeScript + Tailwind CSS v4 + Express server entry (<code>server.ts</code>).</li>
+              <li>Configure typography pairing (<code>Cormorant Garamond</code> + <code>Plus Jakarta Sans</code> + <code>JetBrains Mono</code>) and 3-atmosphere theme tokens.</li>
+              <li>Optimize downloaded <code>.glb</code> models with <code>gltf-transform</code> (Draco + 1024px WebP) and place in <code>public/models/</code> + <code>public/draco/</code>.</li>
+              <li>Implement <code>assetLoader.ts</code> with auto-grounding, shadow flags, and graceful fallback if a model fails to load.</li>
+            </ul>
+          </div>
+
+          <div class="box" style="margin-bottom: 16px;">
+            <div class="phase-header">
+              <h4>Phase 2 — Main 3D Cafe Diorama &amp; Spatial Interaction</h4>
+              <span class="phase-meta">Week 1–2 · Days 4–7</span>
+            </div>
+            <ul>
+              <li>Build WebGL renderer with <code>ACESFilmicToneMapping</code>, <code>SRGBColorSpace</code>, <code>RoomEnvironment</code> PMREM, and Software-WebGL guard (<code>isSoftwareGl</code> + <code>afterDraw</code>).</li>
+              <li>Compose cafe shell, espresso bar, Kyoto tower, roastery wall, merch shelf, and physical tables <code>T1–T5</code> (using your <code>.glb</code> assets + procedural accents).</li>
+              <li>Add throttled raycasting, smooth <code>THREE.MathUtils.damp</code> camera focus presets, collapsible bottom control dock, and <code>webglcontextlost</code> recovery.</li>
+            </ul>
+          </div>
+
+          <div class="box" style="margin-bottom: 16px;">
+            <div class="phase-header">
+              <h4>Phase 3 — 3D Commercial Product Studio &amp; Storefront Catalog</h4>
+              <span class="phase-meta">Week 2 · Days 8–10</span>
+            </div>
+            <ul>
+              <li>Build <code>ProductShowcase3D.tsx</code> using on-demand coalesced rendering (<code>requestRender()</code>) to display 360° rotatable product <code>.glb</code> models.</li>
+              <li>Connect variant controls (8 oz / 12 oz scale, milk options, whole-bean grind, Obsidian/Linen bag label swap) directly to the 3D mesh and cart payload.</li>
+              <li>Wire <em>3D View</em> button on every Menu Catalog card to scroll and load that product onto the 3D turntable.</li>
+            </ul>
+          </div>
+
+          <div class="box" style="margin-bottom: 16px;">
+            <div class="phase-header">
+              <h4>Phase 4 — Commercial Backend, Inventory &amp; Table Reservation Engine</h4>
+              <span class="phase-meta">Week 3 · Days 11–14</span>
+            </div>
+            <ul>
+              <li>Implement <code>/api/orders</code> with database transactions for atomic stock verification and decrement.</li>
+              <li>Implement <code>/api/reservations</code> with seat-capacity validation and date/time conflict prevention.</li>
+              <li>Build Bag Drawer with fulfillment modes (<code>pickup</code>, <code>dine-in</code>, <code>shipping</code>), promo calculation, tip selector, and 4-step live order tracker.</li>
+            </ul>
+          </div>
+
+          <div class="box" style="margin-bottom: 16px;">
+            <div class="phase-header">
+              <h4>Phase 5 — Owner Studio &amp; Aesthetic-to-Storefront Connectivity</h4>
+              <span class="phase-meta">Week 3–4 · Days 15–17</span>
+            </div>
+            <ul>
+              <li>Build Owner Studio tabs: Aesthetic &amp; Lighting Sync, Barista KDS Order Queue, 3D Floor Table Control, and Menu/Inventory Manager.</li>
+              <li>Protect Owner Studio routes with authentication (e.g., Firebase Auth or JWT session middleware) before production go-live.</li>
+              <li>Verify real-time sync: changing atmosphere, finish, featured item, or table status updates both the 3D scene and customer storefront.</li>
+            </ul>
+          </div>
+
+          <div class="box">
+            <div class="phase-header">
+              <h4>Phase 6 — Performance Tuning, Automated Testing &amp; Deployment</h4>
+              <span class="phase-meta">Week 4 · Days 18–21</span>
+            </div>
+            <ul>
+              <li>Audit GPU memory disposal, draw calls (&lt; 80), Lighthouse scores, and WCAG AA contrast across all 3 atmospheres.</li>
+              <li>Execute full unit, API integration, and Playwright 3D E2E test suites.</li>
+              <li>Deploy to production with CDN caching for <code>.glb</code> models and automated health checks.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- 6. TESTING -->
+        <section id="testing" class="card">
+          <h2 class="section-title">6. Testing &amp; Quality Assurance Matrix</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Test Layer</th>
+                <th>Tooling</th>
+                <th>Key Assertions &amp; Edge Cases</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Business Logic Unit</strong></td>
+                <td>Vitest</td>
+                <td>
+                  Promo code math (<code>ROAST10</code>), extra-shot pricing, atomic stock floor at <code>0</code>, automatic <code>available = false</code> when sold out.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>API &amp; Concurrency</strong></td>
+                <td>Vitest + Supertest</td>
+                <td>
+                  Two simultaneous orders for the last pastry (only 1 succeeds with <code>201</code>, second returns <code>409 Conflict</code>); double-booking same table + slot returns <code>409</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>3D WebGL &amp; Asset Integrity</strong></td>
+                <td>Playwright (Chromium)</td>
+                <td>
+                  Zero 404s on <code>/models/*.glb</code> and <code>/draco/*</code>; canvas mounts with non-zero dimensions; raycast click on <code>T1</code> selects Table 1 in booking form; zero console/WebGL errors.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Memory &amp; Performance</strong></td>
+                <td>Chrome DevTools + Spector.js</td>
+                <td>
+                  Switch between Storefront &amp; Owner Studio 10 times; verify WebGL textures/geometries are disposed and GPU heap stays flat.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Accessibility &amp; Theme Contrast</strong></td>
+                <td>axe-core / Lighthouse</td>
+                <td>
+                  All text &ge; 4.5:1 contrast in Morning, Golden, and Evening themes; <code>prefers-reduced-motion</code> disables steam &amp; vinyl rotation; all modals trap focus cleanly.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 7. DEPLOYMENT -->
+        <section id="deployment" class="card">
+          <h2 class="section-title">7. Production Deployment Blueprint</h2>
+          <div class="grid-2">
+            <div class="box">
+              <h4>Build &amp; Asset Serving</h4>
+              <pre>npm run lint      # tsc --noEmit
+npm run build     # Vite bundles client to dist/
+NODE_ENV=production npm start</pre>
+              <p>
+                Configure Express static middleware (or Cloudflare / Cloud CDN) to serve <code>.glb</code>, <code>.wasm</code>, and <code>.jpg</code> assets with immutable caching:
+                <code>Cache-Control: public, max-age=31536000, immutable</code> and proper MIME type <code>model/gltf-binary</code>.
+              </p>
+            </div>
+            <div class="box">
+              <h4>Infrastructure &amp; Environment Checklist</h4>
+              <ul class="checklist">
+                <li><code>DATABASE_URL</code> pointing to managed PostgreSQL / Cloud SQL</li>
+                <li><code>ADMIN_AUTH_SECRET</code> protecting Owner Studio APIs (<code>PATCH /api/config</code>, <code>/api/menu</code>, <code>/api/orders/:id</code>)</li>
+                <li><code>GET /api/health</code> returning <code>200 OK</code> + DB ping for Cloud Run / load balancer probes</li>
+                <li>Gzip / Brotli compression enabled on Express for JSON and <code>.glb</code> payloads</li>
+                <li>Automated daily database backup before menu/order volume scales</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. IDE WORKFLOW -->
+        <section id="ide-prompts" class="card">
+          <h2 class="section-title">8. Step-by-Step IDE Integration Sequence for Your 3D Files</h2>
+          <p class="muted">Follow these exact steps inside VS Code / Cursor to swap in your downloaded 3D assets cleanly:</p>
+          <ol>
+            <li><strong>Inspect your downloaded files</strong>: Open them in Blender or <code>gltf.report</code> to verify scale (1 unit = 1 meter), check material names, and remove unseen backfaces.</li>
+            <li><strong>Compress with Draco</strong>: Run <code>npx gltf-transform optimize</code> into <code>public/models/cafe/</code> and <code>public/models/products/</code>.</li>
+            <li><strong>Copy Draco decoders</strong>: Copy <code>node_modules/three/examples/jsm/libs/draco/gltf/*</code> into <code>public/draco/</code> so loading never depends on third-party CDNs.</li>
+            <li><strong>Register models in <code>cafeBuilder.ts</code> &amp; <code>ProductShowcase3D.tsx</code></strong>: Call <code>loadNormalizedGLB('/models/...')</code> while keeping the existing procedural meshes as instant-render placeholders until the async Promise resolves.</li>
+            <li><strong>Verify in Browser</strong>: Run <code>npm run dev</code>, open Network tab (verify <code>200 OK</code> on every <code>.glb</code> and <code>.wasm</code>), test clicking tables and hotspots, and test checkout &amp; Owner Studio sync.</li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
